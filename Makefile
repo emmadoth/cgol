@@ -1,10 +1,11 @@
-WARN = -Wall -Wextra -Wconversion -Wvla
+WARN = -Wall -Wextra -Wconversion
+LINK = -lncurses
 
 default:
-	$(CC) $(WARN) main.c -o cgol
+	$(CC) $(WARN) $(LINK)     main.c -o cgol
 
 debug:
-	$(CC) $(WARN) -g3 main.c -o cgol
+	$(CC) $(WARN) $(LINK) -g3 main.c -o cgol
 
 run: default
 	./cgol

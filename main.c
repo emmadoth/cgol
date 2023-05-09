@@ -1,57 +1,53 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ncurses.h>
 
-#define WIDTH 213
-#define HEIGHT 56
+#define F_ARGS _Size* size, _Bool (*board)[size->width], char (*neighbours)[size->width], int y, int x
 
-#define F_ARGS _Bool board[HEIGHT][WIDTH], int neighbours[HEIGHT][WIDTH], int y, int x
+typedef struct {
+    int height;
+    int width;
+} _Size;
 
-int get_neighbours(_Bool board[HEIGHT][WIDTH], int y, int x)
+
+void iter(void (*f)(F_ARGS), _Size *size, _Bool (*board)[size->width], char (*neighbours)[size->width])
 {
-    int neighbours = 0;
-
-    if(y > 0)
+    for(int y = 0; y < size->height; ++y)
     {
-        if(board[y - 1][x]) ++neighbours; // n
-
-    	if((x + 1) < WIDTH && board[y - 1][x + 1]) ++neighbours; // ne
-        if( x > 0          && board[y - 1][x - 1]) ++neighbours; // nw
+        for(int x = 0; x < size->width; ++x)
+        {
+            (*f)(size, board, neighbours, y, x);
+        }
     }
-
-    if((x + 1) < WIDTH && board[y][x + 1]) ++neighbours; // e
-    if( x > 0         && board[y][x - 1]) ++neighbours; // w
-
-    if((y + 1) < HEIGHT)
-    {
-        if(board[y + 1][x]) ++neighbours; // s
-
-        if((x + 1) < WIDTH && board[y + 1][x + 1]) ++neighbours; // se
-        if( x > 0          && board[y + 1][x - 1]) ++neighbours; // sw
-    }
-
-    return neighbours;
 }
 
-void iter(void (*f)(F_ARGS), _Bool board[HEIGHT][WIDTH], int neighbours[HEIGHT][WIDTH])
+void get_neighbours(F_ARGS)
 {
-    for(int y = 0; y < HEIGHT; ++y)
+    if(y > 0)
     {
-        for(int x = 0; x < WIDTH; ++x)
-        {
-            (*f)(board, neighbours, y, x);
-        }
+        if(board[y - 1][x]) neighbours[y][x] += 1; // n
+
+    	if((x + 1) < size->width && board[y - 1][x + 1]) neighbours[y][x] += 1; // ne
+        if( x > 0                && board[y - 1][x - 1]) neighbours[y][x] += 1; // nw
+    }
+
+    if((x + 1) < size->width && board[y][x + 1]) neighbours[y][x] += 1; // e
+    if( x > 0                && board[y][x - 1]) neighbours[y][x] += 1; // w
+
+    if((y + 1) < size->height)
+    {
+        if(board[y + 1][x]) neighbours[y][x] += 1; // s
+
+        if((x + 1) < size->height && board[y + 1][x + 1]) neighbours[y][x] += 1; // se
+        if( x > 0                 && board[y + 1][x - 1]) neighbours[y][x] += 1; // sw
     }
 }
 
 void print_board_pos(F_ARGS)
 {
-    board[y][x] ? putc('*', stdout) : putc('.', stdout);
-    if(x + 1 == WIDTH)
-        putc('\n', stdout);
-}
-
-void calculate_neighbours(F_ARGS)
-{
-    neighbours[y][x] = get_neighbours(board, y, x);
+    if(board[y][x])
+        mvaddch(y, x, '*');
 }
 
 void apply_rules(F_ARGS)
@@ -72,6 +68,8 @@ int handle_input(int input)
     {
         case 'q':
             return 0;
+        case KEY_RESIZE:
+            return 0;
         default:
             return 1;
     }
@@ -79,8 +77,18 @@ int handle_input(int input)
 
 int main(void)
 {
-    _Bool board[HEIGHT][WIDTH] = { 0 };
-    int neighbours[HEIGHT][WIDTH] = { 0 };
+    initscr();
+    cbreak();
+    noecho();
+
+    _Size size;
+    getmaxyx(stdscr, size.height, size.width);
+
+    _Bool (*board     )[size.width] = malloc(size.height * size.width * sizeof(_Bool));
+    char  (*neighbours)[size.width] = malloc(size.height * size.width * sizeof(char ));
+
+    memset(board     , 0, size.height * size.width * sizeof(_Bool));
+    memset(neighbours, 0, size.height * size.width * sizeof(char ));
 
     board[0][1] = 1;
     board[1][2] = 1;
@@ -88,22 +96,31 @@ int main(void)
     board[2][1] = 1;
     board[2][2] = 1;
 
-    iter(&print_board_pos, board, neighbours);
-    
-    int input = getchar();
+    iter(&print_board_pos, &size, board, neighbours);
+
+    int input = getch();
     _Bool run = handle_input(input);
 
     while(run)
     {
-        iter(&calculate_neighbours, board, neighbours);
+        iter(&get_neighbours, &size, board, neighbours);
 
-        iter(&apply_rules, board, neighbours);
+        iter(&apply_rules, &size, board, neighbours);
 
-        iter(&print_board_pos, board, neighbours);
+        clear();
+        iter(&print_board_pos, &size, board, neighbours);
+        refresh();
 
-        input = getchar();
+        input = getch();
         run = handle_input(input);
+
+        memset(neighbours, 0, size.height * size.width * sizeof(char ));
     }
 
-    return 0;
+    free(board);
+    free(neighbours);
+
+    endwin();
+
+    return run;
 }
