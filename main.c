@@ -26,21 +26,21 @@ void get_neighbours(F_ARGS)
 {
     if(y > 0)
     {
-        if(board[y - 1][x]) neighbours[y][x] += 1; // n
+        if(board[y - 1][x]) ++neighbours[y][x]; // n
 
-    	if((x + 1) < size->width && board[y - 1][x + 1]) neighbours[y][x] += 1; // ne
-        if( x > 0                && board[y - 1][x - 1]) neighbours[y][x] += 1; // nw
+    	if((x + 1) < size->width && board[y - 1][x + 1]) ++neighbours[y][x]; // ne
+        if( x > 0                && board[y - 1][x - 1]) ++neighbours[y][x]; // nw
     }
 
-    if((x + 1) < size->width && board[y][x + 1]) neighbours[y][x] += 1; // e
-    if( x > 0                && board[y][x - 1]) neighbours[y][x] += 1; // w
+    if((x + 1) < size->width && board[y][x + 1]) ++neighbours[y][x]; // e
+    if( x > 0                && board[y][x - 1]) ++neighbours[y][x]; // w
 
     if((y + 1) < size->height)
     {
-        if(board[y + 1][x]) neighbours[y][x] += 1; // s
+        if(board[y + 1][x]) ++neighbours[y][x]; // s
 
-        if((x + 1) < size->height && board[y + 1][x + 1]) neighbours[y][x] += 1; // se
-        if( x > 0                 && board[y + 1][x - 1]) neighbours[y][x] += 1; // sw
+        if((x + 1) < size->height && board[y + 1][x + 1]) ++neighbours[y][x]; // se
+        if( x > 0                 && board[y + 1][x - 1]) ++neighbours[y][x]; // sw
     }
 }
 
