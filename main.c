@@ -3,7 +3,7 @@
 #include <string.h>
 #include <ncurses.h>
 
-#define F_ARGS _Size* size, _Bool (*board)[size->width], char (*neighbours)[size->width], int y, int x
+#define F_ARGS _Size* size, _Bool (*board)[size->width], [[maybe_unused]] char (*neighbours)[size->width], int y, int x
 
 typedef struct {
     int height;
@@ -62,7 +62,7 @@ void apply_rules(F_ARGS)
     }
 }
 
-int handle_input(int input)
+_Bool handle_input(int input)
 {
     switch(input)
     {
@@ -84,11 +84,11 @@ int main(void)
     _Size size;
     getmaxyx(stdscr, size.height, size.width);
 
-    _Bool (*board     )[size.width] = malloc(size.height * size.width * sizeof(_Bool));
-    char  (*neighbours)[size.width] = malloc(size.height * size.width * sizeof(char ));
+    _Bool (*board     )[size.width] = malloc((size_t)size.height * (size_t)size.width * sizeof(_Bool));
+    char  (*neighbours)[size.width] = malloc((size_t)size.height * (size_t)size.width * sizeof(char ));
 
-    memset(board     , 0, size.height * size.width * sizeof(_Bool));
-    memset(neighbours, 0, size.height * size.width * sizeof(char ));
+    memset(board     , 0, (size_t)size.height * (size_t)size.width * sizeof(_Bool));
+    memset(neighbours, 0, (size_t)size.height * (size_t)size.width * sizeof(char ));
 
     board[0][1] = 1;
     board[1][2] = 1;
@@ -114,7 +114,7 @@ int main(void)
         input = getch();
         run = handle_input(input);
 
-        memset(neighbours, 0, size.height * size.width * sizeof(char ));
+        memset(neighbours, 0, (size_t)size.height * (size_t)size.width * sizeof(char ));
     }
 
     free(board);
